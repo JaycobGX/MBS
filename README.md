@@ -4,7 +4,7 @@ Movie Booking System for Software Engineering CS3365H01
 **Download Requirements:**
 1. Git
 2. Node.js(LTS Version, Make sure it is added to PATH)
-How to allow scripts to be run for Node.js
+**How to allow scripts to be run for Node.js**
 1. open PowerShell as Administrator
 2. Check current execution policy (Get-ExecutionPolicy)
 3. Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
