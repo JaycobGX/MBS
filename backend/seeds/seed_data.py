@@ -6,9 +6,7 @@ from datetime import datetime, timedelta
 
 app = create_app()
 
-# ----------------------
 # SAMPLE MOVIES
-# ----------------------
 movies_data = [
     {
         "title": "Avatar: The Way of Water",
@@ -42,9 +40,7 @@ movies_data = [
     }
 ]
 
-# ----------------------
 # SAMPLE SHOWTIMES
-# ----------------------
 def generate_showtimes(movie_id):
     showtimes = []
     base_time = datetime.now().replace(hour=15, minute=0, second=0, microsecond=0)

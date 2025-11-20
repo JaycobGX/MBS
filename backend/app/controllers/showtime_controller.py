@@ -2,10 +2,7 @@ from app.extensions import db
 from app.models.showtime import Showtime
 from datetime import datetime
 
-
-# -------------------------------------------
 # 1. Add a new showtime
-# -------------------------------------------
 def add_showtime(data):
     """
     Expected fields:
@@ -28,17 +25,12 @@ def add_showtime(data):
     db.session.commit()
     return showtime
 
-
-# -------------------------------------------
 # 2. Get showtimes for a movie
-# -------------------------------------------
 def get_showtimes_for_movie(movie_id):
     return Showtime.query.filter_by(movie_id=movie_id).all()
 
 
-# -------------------------------------------
 # 3. Update a showtime
-# -------------------------------------------
 def update_showtime(showtime_id, data):
     showtime = Showtime.query.get(showtime_id)
     if not showtime:
@@ -57,10 +49,7 @@ def update_showtime(showtime_id, data):
     db.session.commit()
     return showtime
 
-
-# -------------------------------------------
 # 4. Delete a showtime
-# -------------------------------------------
 def delete_showtime(showtime_id):
     showtime = Showtime.query.get(showtime_id)
     if not showtime:

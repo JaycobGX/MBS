@@ -2,10 +2,7 @@ from app.extensions import db
 from app.models.movie import Movie
 from datetime import datetime
 
-
-# -------------------------------------------
 # 1. Add a new movie
-# -------------------------------------------
 def add_movie(data):
     """
     data is expected to be a dictionary containing:
@@ -35,10 +32,7 @@ def add_movie(data):
     db.session.commit()
     return movie
 
-
-# -------------------------------------------
 # 2. Update movie by ID
-# -------------------------------------------
 def update_movie(movie_id, data):
     movie = Movie.query.get(movie_id)
     if not movie:
@@ -56,10 +50,7 @@ def update_movie(movie_id, data):
     db.session.commit()
     return movie
 
-
-# -------------------------------------------
 # 3. Delete a movie
-# -------------------------------------------
 def delete_movie(movie_id):
     movie = Movie.query.get(movie_id)
     if not movie:
@@ -69,24 +60,15 @@ def delete_movie(movie_id):
     db.session.commit()
     return True
 
-
-# -------------------------------------------
 # 4. Get ALL movies
-# -------------------------------------------
 def get_all_movies():
     return Movie.query.all()
 
-
-# -------------------------------------------
 # 5. Get ONE movie by ID
-# -------------------------------------------
 def get_movie_by_id(movie_id):
     return Movie.query.get(movie_id)
 
-
-# -------------------------------------------
 # 6. Search movies (by title or genre)
-# -------------------------------------------
 def search_movies(keyword):
     keyword = f"%{keyword}%"
     return Movie.query.filter(
@@ -94,16 +76,10 @@ def search_movies(keyword):
         (Movie.genre.ilike(keyword))
     ).all()
 
-
-# -------------------------------------------
 # 7. Upcoming movies
-# -------------------------------------------
 def get_upcoming_movies():
     return Movie.query.filter_by(is_upcoming=True).all()
 
-
-# -------------------------------------------
 # 8. Now showing movies
-# -------------------------------------------
 def get_now_showing_movies():
     return Movie.query.filter_by(is_upcoming=False).all()

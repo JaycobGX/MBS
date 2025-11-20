@@ -12,19 +12,13 @@ from app.controllers.admin_controller import (
 
 admin_bp = Blueprint("admin", __name__)
 
-
-# -------------------------------------------
 # 1. Admin Dashboard Stats
-# -------------------------------------------
 @admin_bp.get("/admin/stats")
 def admin_stats():
     stats = get_basic_stats()
     return jsonify(stats), 200
 
-
-# -------------------------------------------
 # 2. Add Movie
-# -------------------------------------------
 @admin_bp.post("/admin/movies")
 def admin_create_movie():
     data = request.json
@@ -34,10 +28,7 @@ def admin_create_movie():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-
-# -------------------------------------------
 # 3. Update Movie
-# -------------------------------------------
 @admin_bp.put("/admin/movies/<int:movie_id>")
 def admin_update_movie_route(movie_id):
     data = request.json
@@ -46,10 +37,7 @@ def admin_update_movie_route(movie_id):
         return jsonify({"error": "Movie not found"}), 404
     return jsonify(updated.as_dict()), 200
 
-
-# -------------------------------------------
 # 4. Delete Movie
-# -------------------------------------------
 @admin_bp.delete("/admin/movies/<int:movie_id>")
 def admin_delete_movie_route(movie_id):
     deleted = admin_delete_movie(movie_id)
@@ -57,10 +45,7 @@ def admin_delete_movie_route(movie_id):
         return jsonify({"error": "Movie not found"}), 404
     return jsonify({"message": "Movie deleted"}), 200
 
-
-# -------------------------------------------
 # 5. Add Showtime
-# -------------------------------------------
 @admin_bp.post("/admin/showtimes")
 def admin_create_showtime():
     data = request.json
@@ -70,10 +55,7 @@ def admin_create_showtime():
     except Exception as e:
         return jsonify({"error": str(e)}), 400
 
-
-# -------------------------------------------
 # 6. Update Showtime
-# -------------------------------------------
 @admin_bp.put("/admin/showtimes/<int:showtime_id>")
 def admin_update_showtime_route(showtime_id):
     data = request.json
@@ -82,10 +64,7 @@ def admin_update_showtime_route(showtime_id):
         return jsonify({"error": "Showtime not found"}), 404
     return jsonify(updated.as_dict()), 200
 
-
-# -------------------------------------------
 # 7. Delete Showtime
-# -------------------------------------------
 @admin_bp.delete("/admin/showtimes/<int:showtime_id>")
 def admin_delete_showtime_route(showtime_id):
     deleted = admin_delete_showtime(showtime_id)
@@ -93,10 +72,7 @@ def admin_delete_showtime_route(showtime_id):
         return jsonify({"error": "Showtime not found"}), 404
     return jsonify({"message": "Showtime deleted"}), 200
 
-
-# -------------------------------------------
 # 8. List all Showtimes
-# -------------------------------------------
 @admin_bp.get("/admin/showtimes")
 def admin_list_all_showtimes():
     showtimes = admin_list_showtimes()
