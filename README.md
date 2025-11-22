@@ -16,5 +16,6 @@ To update npm
 
 **How to start dev server**
 1. open command prompt
-2. enter "npm start"
+2. enter "npm install react-router-dom"
+3. enter "npm start"
 
