@@ -25,7 +25,8 @@ git clone repo-url
 ## HOW TO RUN DEVELOPMENT SERVER
 
 This will allow you to see all of the pages:\
-npm start (cmd prompt WHILE IN FRONTEND FOLDER)
+   npm start (cmd prompt WHILE IN FRONTEND FOLDER)\
+   ctrl + C (in cmd prompt to stop server)
 
 # Getting Started with Create React App
 
