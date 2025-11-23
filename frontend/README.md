@@ -4,7 +4,7 @@
 
 To Verify Installation:\
 node -v (cmd prompt)\
-npm -v (cmd prompt)\
+npm -v (cmd prompt)
 
 ### 'Git (https://git-scm.com/install/windows)
 
@@ -14,18 +14,18 @@ git –version (cmd prompt)
 ## HOW TO DOWNLOAD PROJECT
 
 ### Clone Repository
-git clone repo-url \
+git clone repo-url 
 
 ### Install Required Dependencies
 1. Enter Frontend Folder\
-   cd MBS/frontend (cmd prompt)\
+   cd MBS/frontend (cmd prompt)
 2. Install Node Modules\
-   npm install (cmd prompt)\
+   npm install (cmd prompt)
 
 ## HOW TO RUN DEVELOPMENT SERVER
 
-This will allow you to see all of the pages\
-npm start (cmd prompt WHILE IN FRONTEND FOLDER)\
+This will allow you to see all of the pages:\
+npm start (cmd prompt WHILE IN FRONTEND FOLDER)
 
 # Getting Started with Create React App
 
