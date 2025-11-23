@@ -5,8 +5,10 @@ function Signup() {
     <div style={styles.container}>
       <h2>Create an Account</h2>
       <form style={styles.form}>
-        <input type="text" placeholder="Username" style={styles.input} />
+        <input type="text" placeholder="Name" style={styles.input} />
         <input type="email" placeholder="Email" style={styles.input} />
+        <input type="tel" placeholder="Phone Number" style={styles.input} />
+        <input type="text" placeholder="Address" style={styles.input} />
         <input type="password" placeholder="Password" style={styles.input} />
         <button style={styles.button}>Sign Up</button>
       </form>

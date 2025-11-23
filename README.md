@@ -19,4 +19,3 @@ To update npm
 2. enter "npm install react-router-dom"
 3. enter "npm start"
 
-
