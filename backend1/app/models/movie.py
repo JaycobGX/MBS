@@ -17,8 +17,11 @@ class Movie(db.Model):
     synopsis = db.Column(db.Text, nullable=True)
     genre = db.Column(db.String(100), nullable=True)
     duration_minutes = db.Column(db.Integer, nullable=True)
+
     cast = db.Column(db.Text, nullable=True)
-    rating = db.Column(db.Float, nullable=True)  # avg user rating
+    rating = db.Column(db.Float, nullable=True)
+    image_url = db.Column(db.String(300), nullable=True)
+
     status = db.Column(db.Enum(MovieStatus), nullable=False, default=MovieStatus.CURRENT)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 

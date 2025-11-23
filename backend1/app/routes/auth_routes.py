@@ -18,7 +18,6 @@ def register():
     phone = data.get("phone")
     address = data.get("address")
 
-    # Validate required fields (FR1.1–FR1.3)
     missing = [f for f in ["full_name", "email", "password"] if not data.get(f)]
     if missing:
         return (
@@ -64,11 +63,14 @@ def login():
 
     user = User.query.filter_by(email=email).first()
     if not user or not check_password(password, user.password_hash):
-        # FR2.3 – error on mismatch
         return jsonify({"message": "Invalid email or password"}), 401
 
     additional_claims = {"role": user.role.value}
-    access_token = create_access_token(identity=user.id, additional_claims=additional_claims)
+
+    access_token = create_access_token(
+        identity=str(user.id),    
+        additional_claims=additional_claims
+    )
 
     return jsonify(
         {
