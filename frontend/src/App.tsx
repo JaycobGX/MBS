@@ -13,24 +13,41 @@ import Profile from "./pages/Profile";
 import AdminDashboard from "./pages/AdminDashboard";
 import NotFound from "./pages/NotFound";
 
+type Role = "user" | "admin";
 
-// Simple placeholders for later auth
+type User = {
+  email: string;
+  name: string;
+  role: Role;
+};
+
+function getCurrentUser(): User | null {
+  if (typeof window === "undefined") return null;
+  const raw = localStorage.getItem("mbs_user");
+  if (!raw) return null;
+  try {
+    return JSON.parse(raw) as User;
+  } catch {
+    return null;
+  }
+}
+
 const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const isLoggedIn = true; // TODO: real auth later
-  return isLoggedIn ? <>{children}</> : <Login />;
+  const user = getCurrentUser();
+  return user ? <>{children}</> : <Login />;
 };
 
 const AdminRoute = ({ children }: { children: ReactNode }) => {
-  const isAdmin = false; // TODO: real role check later
+  const user = getCurrentUser();
+  const isAdmin = user && user.role === "admin";
   return isAdmin ? <>{children}</> : <NotFound />;
-};  
+};
 
 export default function App() {
   return (
     <>
       <Navbar />
 
-      {/* Global page padding + max width */}
       <div className="max-w-6xl mx-auto px-4 py-6">
         <Routes>
           <Route path="/" element={<Home />} />
