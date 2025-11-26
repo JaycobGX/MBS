@@ -1,8 +1,6 @@
 import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import type { FormEvent } from "react";
-import { useNavigate } from "react-router-dom";
-
-type Role = "user" | "admin";
 
 type LoginForm = {
   email: string;
@@ -20,125 +18,154 @@ export default function Login() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  function handleChange(
-    field: keyof LoginForm,
-    value: string
-  ) {
+  const handleChange = (field: keyof LoginForm, value: string) => {
     setForm((prev) => ({ ...prev, [field]: value }));
-  }
+  };
 
-  function fakeAuthenticate(
-    email: string,
-    password: string
-  ): { role: Role } | null {
-    // Very simple mock:
-    // - admin@mbs.com with password admin123 => admin
-    // - anything with password user123 => user
-    if (email === "admin@mbs.com" && password === "admin123") {
-      return { role: "admin" };
-    }
-    if (password === "user123") {
-      return { role: "user" };
-    }
-    return null;
-  }
-
-  function handleSubmit(e: FormEvent<HTMLFormElement>) {
+  const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
-    const { email, password } = form;
+    try {
+      const res = await fetch("http://127.0.0.1:5000/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
 
-    if (!email || !password) {
-      setError("Please enter both email and password.");
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Login failed.");
+        setLoading(false);
+        return;
+      }
+
+      // Save token and role
+      localStorage.setItem("token", data.access_token);
+      localStorage.setItem("role", data.role);
+
       setLoading(false);
-      return;
-    }
 
-    const result = fakeAuthenticate(email, password);
-
-    if (!result) {
-      setError("Invalid email or password (try admin@mbs.com / admin123 or any-email / user123).");
+      // Redirect
+      if (data.role === "admin") {
+        navigate("/Admindashboard");
+      } else {
+        navigate("/home");
+      }
+    } catch (err) {
+      setError("Network error.");
       setLoading(false);
-      return;
     }
+  };
 
-    const user = {
-      email,
-      role: result.role,
-      name: email.split("@")[0],
-    };
+  const containerStyle: React.CSSProperties = {
+    minHeight: "100vh",
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#f3f4f6", // Tailwind bg-gray-100
+    padding: "16px",
+  };
 
-    // Save "logged-in user" in localStorage (for Navbar / ProtectedRoute later)
-    localStorage.setItem("mbs_user", JSON.stringify(user));
+  const formStyle: React.CSSProperties = {
+    backgroundColor: "#ffffff",
+    padding: "24px",
+    borderRadius: "24px",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+    width: "100%",
+    maxWidth: "400px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "16px",
+  };
 
-    setLoading(false);
+  const labelStyle: React.CSSProperties = {
+    display: "block",
+    fontSize: "14px",
+    fontWeight: 500,
+    marginBottom: "4px",
+  };
 
-    if (result.role === "admin") {
-      navigate("/admin");
-    } else {
-      navigate("/profile");
-    }
-  }
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "8px 12px",
+    border: "1px solid #ccc",
+    borderRadius: "12px",
+    outline: "none",
+    fontSize: "14px",
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    width: "100%",
+    padding: "10px 0",
+    borderRadius: "12px",
+    fontWeight: 600,
+    color: "#ffffff",
+    backgroundColor: loading ? "#9ca3af" : "#eb2525ff",
+    border: "none",
+    cursor: loading ? "not-allowed" : "pointer",
+  };
+
+  const errorStyle: React.CSSProperties = {
+    fontSize: "14px",
+    color: "#b91c1c",
+    backgroundColor: "#fee2e2",
+    border: "1px solid #fecaca",
+    borderRadius: "8px",
+    padding: "8px",
+  };
+
+  const linkStyle: React.CSSProperties = {
+    color: "#2563eb",
+    textDecoration: "underline",
+  };
 
   return (
-    <div className="max-w-md mx-auto mt-8 border rounded-2xl p-6 bg-white space-y-4">
-      <h1 className="text-2xl font-bold text-center">Login</h1>
-      <p className="text-sm text-gray-600 text-center">
-        Demo credentials:
-        <br />
-        <span className="font-mono">
-          admin@mbs.com / admin123 (admin)
-        </span>
-        <br />
-        <span className="font-mono">
-          any-email / user123 (regular user)
-        </span>
-      </p>
+    <div style={containerStyle}>
+      <h1 style={{ fontSize: "24px", fontWeight: 700, marginBottom: "32px" }}>
+        Welcome to MBS
+      </h1>
 
-      {error && (
-        <div className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
-          {error}
-        </div>
-      )}
+      <form onSubmit={handleSubmit} style={formStyle}>
+        {error && <div style={errorStyle}>{error}</div>}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">
-            Email
-          </label>
+        <div>
+          <label style={labelStyle}>Email</label>
           <input
             type="email"
             value={form.email}
             onChange={(e) => handleChange("email", e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm"
-            placeholder="you@example.com"
+            placeholder="Enter your email"
+            required
+            style={inputStyle}
           />
         </div>
 
-        <div className="space-y-1">
-          <label className="block text-sm font-medium text-gray-700">
-            Password
-          </label>
+        <div>
+          <label style={labelStyle}>Password</label>
           <input
             type="password"
             value={form.password}
             onChange={(e) => handleChange("password", e.target.value)}
-            className="w-full border rounded-lg px-3 py-2 text-sm"
-            placeholder="••••••••"
+            placeholder="Enter your password"
+            required
+            style={inputStyle}
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className={`w-full px-4 py-2 rounded-lg font-semibold text-white text-sm ${
-            loading ? "bg-gray-400" : "bg-blue-600 hover:bg-blue-700"
-          }`}
-        >
+        <button type="submit" disabled={loading} style={buttonStyle}>
           {loading ? "Logging in..." : "Login"}
         </button>
+
+        <p style={{ fontSize: "14px", textAlign: "center", marginTop: "8px" }}>
+          New here?{" "}
+          <Link to="/register" style={linkStyle}>
+            Create Account
+          </Link>
+        </p>
       </form>
     </div>
   );
