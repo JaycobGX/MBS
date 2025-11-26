@@ -1,62 +1,53 @@
 from datetime import datetime
+from functools import wraps
 
-from flask import Blueprint, jsonify, request
-from flask_jwt_extended import jwt_required
+from flask import Blueprint, request, jsonify
+from flask_jwt_extended import jwt_required, get_jwt
 
 from ..extensions import db
 from ..models.movie import Movie, MovieStatus
 from ..models.theater import Theater
 from ..models.showtime import Showtime
-from ..models.booking import Booking, BookingStatus
-from ..utils.permissions import admin_required
 
 admin_bp = Blueprint("admin", __name__)
 
 
-@admin_bp.before_request
-@jwt_required()
-def ensure_admin_jwt():
-    # Verify the token & admin role for all routes in this blueprint
-    admin_required()
+# Helper: admin-only decorator
+def admin_required(fn):
+    @wraps(fn)
+    @jwt_required()
+    def wrapper(*args, **kwargs):
+        claims = get_jwt()  # JWT claims contain "role": "admin"
+        if claims.get("role") != "admin":
+            return jsonify({"message": "Admin privileges required"}), 403
+        return fn(*args, **kwargs)
+
+    return wrapper
 
 
-@admin_bp.get("/status-report")
-def status_report():
+# MOVIE MANAGEMENT
+@admin_bp.route("/movies", methods=["POST"])
+@admin_required
+def create_movie():
     """
-    FR17 – View Status Report (U15)
+    Create a new movie.
+    Required: title
+    Optional: synopsis, genre, duration_minutes, cast, rating, image_url, status
     """
-    total_tickets = (
-        db.session.query(db.func.sum(Booking.num_seats))
-        .filter(Booking.status == BookingStatus.CONFIRMED)
-        .scalar()
-        or 0
-    )
-    total_revenue = (
-        db.session.query(db.func.sum(Booking.total_price))
-        .filter(Booking.status == BookingStatus.CONFIRMED)
-        .scalar()
-        or 0
-    )
-
-    current_movies = Movie.query.filter_by(status=MovieStatus.CURRENT).all()
-
-    return jsonify(
-        {
-            "total_tickets_sold": int(total_tickets),
-            "total_revenue": float(total_revenue),
-            "current_movies": [m.title for m in current_movies],
-        }
-    )
-
-
-# ----- Manage Movies (FR18 & U16/U17) -----
-
-@admin_bp.post("/movies")
-def add_movie():
     data = request.get_json() or {}
+
     title = data.get("title")
     if not title:
-        return jsonify({"message": "Title required"}), 400
+        return jsonify({"message": "Field 'title' is required"}), 400
+
+    status_str = data.get("status", "current").lower()
+    if status_str not in ("current", "upcoming"):
+        return jsonify({"message": "status must be 'current' or 'upcoming'"}), 400
+
+    try:
+        status = MovieStatus(status_str)
+    except ValueError:
+        return jsonify({"message": "Invalid status value"}), 400
 
     movie = Movie(
         title=title,
@@ -64,103 +55,174 @@ def add_movie():
         genre=data.get("genre"),
         duration_minutes=data.get("duration_minutes"),
         cast=data.get("cast"),
-        status=MovieStatus(data.get("status", "current")),
+        rating=data.get("rating"),
+        image_url=data.get("image_url") if hasattr(Movie, "image_url") else None,
+        status=status,
     )
+
     db.session.add(movie)
     db.session.commit()
-    return jsonify({"message": "Movie added", "id": movie.id}), 201
+
+    return jsonify({"message": "Movie created", "movie_id": movie.id}), 201
 
 
-@admin_bp.put("/movies/<int:movie_id>")
-def edit_movie(movie_id):
-    movie = Movie.query.get_or_404(movie_id)
+@admin_bp.route("/movies/<int:movie_id>", methods=["PUT", "PATCH"])
+@admin_required
+def update_movie(movie_id):
+    """
+    Update an existing movie (partial update).
+    """
+    movie = Movie.query.get(movie_id)
+    if not movie:
+        return jsonify({"message": "Movie not found"}), 404
+
     data = request.get_json() or {}
 
-    for field in ["title", "synopsis", "genre", "duration_minutes", "cast"]:
-        if field in data:
-            setattr(movie, field, data[field])
-
+    if "title" in data:
+        movie.title = data["title"]
+    if "synopsis" in data:
+        movie.synopsis = data["synopsis"]
+    if "genre" in data:
+        movie.genre = data["genre"]
+    if "duration_minutes" in data:
+        movie.duration_minutes = data["duration_minutes"]
+    if "cast" in data:
+        movie.cast = data["cast"]
+    if "rating" in data:
+        movie.rating = data["rating"]
+    if "image_url" in data and hasattr(Movie, "image_url"):
+        movie.image_url = data["image_url"]
     if "status" in data:
-        movie.status = MovieStatus(data["status"])
+        status_str = str(data["status"]).lower()
+        if status_str not in ("current", "upcoming"):
+            return jsonify({"message": "status must be 'current' or 'upcoming'"}), 400
+        try:
+            movie.status = MovieStatus(status_str)
+        except ValueError:
+            return jsonify({"message": "Invalid status value"}), 400
 
     db.session.commit()
-    return jsonify({"message": "Movie updated"})
+
+    return jsonify({"message": "Movie updated"}), 200
 
 
-@admin_bp.delete("/movies/<int:movie_id>")
-def remove_movie(movie_id):
-    movie = Movie.query.get_or_404(movie_id)
+@admin_bp.route("/movies/<int:movie_id>", methods=["DELETE"])
+@admin_required
+def delete_movie(movie_id):
+    """
+    Delete a movie. Any related showtimes/reviews must be handled
+    by DB cascade OR manually before this call.
+    """
+    movie = Movie.query.get(movie_id)
+    if not movie:
+        return jsonify({"message": "Movie not found"}), 404
+
+    # If cascade is not configured in the ORM/DB, you may need to:
+    # Showtime.query.filter_by(movie_id=movie.id).delete()
+    # Review.query.filter_by(movie_id=movie.id).delete()
+
     db.session.delete(movie)
     db.session.commit()
-    return jsonify({"message": "Movie removed"})
 
+    return jsonify({"message": "Movie deleted"}), 200
 
-# ----- Manage Theaters & Showtimes (FR18.1/18.2) -----
-
-@admin_bp.post("/theaters")
-def add_theater():
+# THEATER MANAGEMENT
+@admin_bp.route("/theaters", methods=["POST"])
+@admin_required
+def create_theater():
+    """
+    Create a new theater.
+    Required: name, city
+    """
     data = request.get_json() or {}
     name = data.get("name")
     city = data.get("city")
+
     if not name or not city:
-        return jsonify({"message": "name and city required"}), 400
+        return jsonify({"message": "Fields 'name' and 'city' are required"}), 400
 
-    t = Theater(name=name, city=city)
-    db.session.add(t)
+    theater = Theater(name=name, city=city)
+    db.session.add(theater)
     db.session.commit()
-    return jsonify({"message": "Theater added", "id": t.id}), 201
+
+    return jsonify({"message": "Theater created", "theater_id": theater.id}), 201
 
 
-@admin_bp.post("/showtimes")
-def add_showtime():
+# delete a theater
+@admin_bp.route("/theaters/<int:theater_id>", methods=["DELETE"])
+@admin_required
+def delete_theater(theater_id):
+    theater = Theater.query.get(theater_id)
+    if not theater:
+        return jsonify({"message": "Theater not found"}), 404
+
+    # Prevent deletion if showtimes exist
+    if theater.showtimes and theater.showtimes.count() > 0:
+        return jsonify({"message": "Cannot delete theater with existing showtimes"}), 400
+
+    db.session.delete(theater)
+    db.session.commit()
+    return jsonify({"message": "Theater deleted"}), 200
+
+# SHOWTIME MANAGEMENT
+@admin_bp.route("/showtimes", methods=["POST"])
+@admin_required
+def create_showtime():
+    """
+    Create a new showtime.
+    Required: movie_id, theater_id, start_time, ticket_price, total_seats
+    start_time should be a string 'YYYY-MM-DD HH:MM:SS'
+    """
     data = request.get_json() or {}
+
     movie_id = data.get("movie_id")
     theater_id = data.get("theater_id")
-    start_time = data.get("start_time")  # ISO string
+    start_time_str = data.get("start_time")
     ticket_price = data.get("ticket_price")
-    total_seats = data.get("total_seats", 100)
+    total_seats = data.get("total_seats")
 
-    if not all([movie_id, theater_id, start_time, ticket_price]):
-        return jsonify({"message": "movie_id, theater_id, start_time, ticket_price required"}), 400
+    if not (movie_id and theater_id and start_time_str and ticket_price and total_seats):
+        return jsonify({
+            "message": "Fields 'movie_id', 'theater_id', 'start_time', 'ticket_price', 'total_seats' are required"
+        }), 400
 
-    st = Showtime(
+    # validate movie + theater exist:
+    if not Movie.query.get(movie_id):
+        return jsonify({"message": "Invalid movie_id"}), 400
+    if not Theater.query.get(theater_id):
+        return jsonify({"message": "Invalid theater_id"}), 400
+
+    try:
+        start_time = datetime.strptime(start_time_str, "%Y-%m-%d %H:%M:%S")
+    except ValueError:
+        return jsonify({"message": "start_time must be in format 'YYYY-MM-DD HH:MM:SS'"}), 400
+
+    showtime = Showtime(
         movie_id=movie_id,
         theater_id=theater_id,
-        start_time=datetime.fromisoformat(start_time),
+        start_time=start_time,
         ticket_price=ticket_price,
         total_seats=total_seats,
-        available_seats=total_seats,
+        available_seats=total_seats,  # initially all seats available
     )
-    db.session.add(st)
+
+    db.session.add(showtime)
     db.session.commit()
-    return jsonify({"message": "Showtime added", "id": st.id}), 201
+
+    return jsonify({"message": "Showtime created", "showtime_id": showtime.id}), 201
 
 
-@admin_bp.put("/showtimes/<int:showtime_id>")
-def edit_showtime(showtime_id):
-    """
-    FR18.2 – edit time and price.
-    """
-    st = Showtime.query.get_or_404(showtime_id)
-    data = request.get_json() or {}
-
-    if "start_time" in data:
-        st.start_time = datetime.fromisoformat(data["start_time"])
-    if "ticket_price" in data:
-        st.ticket_price = data["ticket_price"]
-    if "total_seats" in data:
-        # adjust available seats based on new total if you want
-        diff = data["total_seats"] - st.total_seats
-        st.total_seats = data["total_seats"]
-        st.available_seats += diff
-
-    db.session.commit()
-    return jsonify({"message": "Showtime updated"})
-
-
-@admin_bp.delete("/showtimes/<int:showtime_id>")
+@admin_bp.route("/showtimes/<int:showtime_id>", methods=["DELETE"])
+@admin_required
 def delete_showtime(showtime_id):
-    st = Showtime.query.get_or_404(showtime_id)
-    db.session.delete(st)
+    """
+    Delete a showtime.
+    """
+    showtime = Showtime.query.get(showtime_id)
+    if not showtime:
+        return jsonify({"message": "Showtime not found"}), 404
+
+    db.session.delete(showtime)
     db.session.commit()
-    return jsonify({"message": "Showtime removed"})
+
+    return jsonify({"message": "Showtime deleted"}), 200

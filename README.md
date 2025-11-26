@@ -16,6 +16,20 @@ To update npm
 
 **How to start dev server**
 1. open command prompt
-2. enter "npm install react-router-dom"
-3. enter "npm start"
+2. enter "npm install vite"
+3. enter "npm install react-router-dom"
+4. enter "npm run dev"
 
+# Movie Booking System (MBS) — Frontend
+
+This is the React + TypeScript + Tailwind frontend for the Movie Booking System (MBS).
+It allows users to browse currently playing and upcoming movies, purchase tickets,
+and view QR/barcode electronic tickets. Admins can manage shows and view ticket reports.
+
+## Tech Stack
+- React (Vite)
+- TypeScript
+- Tailwind CSS
+- React Router
+- API Layer (REST)
+- Cloud/Docker friendly
