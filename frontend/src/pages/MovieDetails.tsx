@@ -1,45 +1,75 @@
 // src/pages/MovieDetails.tsx
 import { useParams, Link } from "react-router-dom";
-import { movies } from "../data/movies";
+import { useState, useEffect } from "react";
+
+type Movie = {
+  id: number;
+  title: string;
+  synopsis: string;
+  genre: string;
+  duration_minutes: number;
+  cast: string[];
+  rating: number;
+  image_url: string;
+  status: string; // "current" or "upcoming"
+  showtimes?: string[]; // Optional, if backend includes showtimes
+};
 
 export default function MovieDetails() {
   const { id } = useParams<{ id: string }>();
-  const movie = movies.find((m) => m.id === id);
+  const [movie, setMovie] = useState<Movie | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!movie) {
+  useEffect(() => {
+    const fetchMovie = async () => {
+      try {
+        const res = await fetch(`http://127.0.0.1:5000/api/movies/${id}`);
+        if (!res.ok) throw new Error("Movie not found");
+        const data = await res.json();
+        setMovie(data);
+      } catch (err) {
+        setError((err as Error).message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMovie();
+  }, [id]);
+
+  if (loading) return <p style={{ textAlign: "center", marginTop: "40px" }}>Loading...</p>;
+  if (error || !movie)
     return (
-      <div className="max-w-4xl mx-auto px-4 py-10">
-        <h1 className="text-2xl font-bold text-[#333333] mb-2">
-          Movie not found
-        </h1>
-        <Link to="/movies" className="text-[#D50032] text-sm">
+      <div style={{ maxWidth: "800px", margin: "40px auto", padding: "0 16px" }}>
+        <h1 style={{ fontSize: "24px", fontWeight: "bold", marginBottom: "16px" }}>Movie not found</h1>
+        <Link to="/movies" style={{ color: "#D50032", textDecoration: "underline", fontSize: "14px" }}>
           ← Back to Movies
         </Link>
       </div>
     );
-  }
 
   const isUpcoming = movie.status === "upcoming";
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-8 grid gap-8 md:grid-cols-[260px,1fr]">
+    <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "32px", display: "grid", gap: "32px", gridTemplateColumns: "260px 1fr" }}>
       {/* Poster */}
-      <div className="w-full">
+      <div>
         <img
-          src={movie.posterUrl}
+          src={movie.image_url}
           alt={movie.title}
-          className="w-full rounded-lg shadow-md object-cover"
+          style={{ width: "100%", borderRadius: "12px", boxShadow: "0 4px 12px rgba(0,0,0,0.1)", objectFit: "cover" }}
         />
-        <div className="mt-4 text-center">
+        <div style={{ marginTop: "16px", textAlign: "center" }}>
           {!isUpcoming ? (
             <Link
               to={`/booking/${movie.id}`}
-              className="inline-block px-5 py-2 bg-[#D50032] text-white rounded font-semibold text-sm hover:bg-[#b4002a]"
+              style={{ display: "inline-block", padding: "8px 16px", backgroundColor: "#D50032", color: "#fff", borderRadius: "8px", fontWeight: 600, fontSize: "14px", textDecoration: "none" }}
             >
               Book Tickets
             </Link>
           ) : (
-            <div className="inline-block px-5 py-2 bg-gray-200 text-gray-700 rounded text-sm font-semibold uppercase">
+            <div style={{ display: "inline-block", padding: "8px 16px", backgroundColor: "#e5e7eb", color: "#4b5563", borderRadius: "8px", fontWeight: 600, fontSize: "14px", textTransform: "uppercase" }}>
               Advance Tickets
             </div>
           )}
@@ -47,31 +77,23 @@ export default function MovieDetails() {
       </div>
 
       {/* Details */}
-      <div className="space-y-4">
+      <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
         <div>
-          <h1 className="text-3xl font-bold text-[#333333]">{movie.title}</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            {movie.genre} • {movie.durationMins} mins •{" "}
-            {movie.category} •{" "}
-            {new Date(movie.releaseDate).toLocaleDateString()}
+          <h1 style={{ fontSize: "28px", fontWeight: "bold", color: "#111827" }}>{movie.title}</h1>
+          <p style={{ fontSize: "14px", color: "#6b7280", marginTop: "4px" }}>
+            {movie.genre} • {movie.duration_minutes} mins • {isUpcoming ? "Upcoming" : "Current"}
           </p>
         </div>
 
         <div>
-          <h2 className="text-lg font-semibold text-[#333333] mb-1">
-            Synopsis
-          </h2>
-          <p className="text-sm leading-relaxed text-gray-700">
-            {movie.synopsis}
-          </p>
+          <h2 style={{ fontSize: "18px", fontWeight: 600, marginBottom: "4px", color: "#111827" }}>Synopsis</h2>
+          <p style={{ fontSize: "14px", lineHeight: 1.6, color: "#374151" }}>{movie.synopsis}</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2">
+        <div style={{ display: "grid", gap: "16px", gridTemplateColumns: "1fr 1fr" }}>
           <div>
-            <h3 className="text-sm font-semibold text-[#333333] mb-1">
-              Cast
-            </h3>
-            <ul className="text-sm text-gray-700 list-disc list-inside">
+            <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px", color: "#111827" }}>Cast</h3>
+            <ul style={{ fontSize: "14px", color: "#374151", listStyle: "disc inside" }}>
               {movie.cast.map((actor) => (
                 <li key={actor}>{actor}</li>
               ))}
@@ -79,33 +101,29 @@ export default function MovieDetails() {
           </div>
 
           <div>
-            <h3 className="text-sm font-semibold text-[#333333] mb-1">
-              Director
-            </h3>
-            <p className="text-sm text-gray-700">{movie.director}</p>
+            <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px", color: "#111827" }}>Rating</h3>
+            <p style={{ fontSize: "14px", color: "#374151" }}>{movie.rating}/10</p>
           </div>
         </div>
 
-        {!isUpcoming && (
+        {!isUpcoming && movie.showtimes && movie.showtimes.length > 0 && (
           <div>
-            <h3 className="text-sm font-semibold text-[#333333] mb-1">
-              Showtimes
-            </h3>
-            <div className="flex flex-wrap gap-2">
+            <h3 style={{ fontSize: "14px", fontWeight: 600, marginBottom: "4px", color: "#111827" }}>Showtimes</h3>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
               {movie.showtimes.map((time) => (
                 <span
                   key={time}
-                  className="px-3 py-1 rounded-full border border-gray-300 text-xs text-gray-700"
+                  style={{ padding: "4px 8px", borderRadius: "999px", border: "1px solid #d1d5db", fontSize: "12px", color: "#374151" }}
                 >
-                  {time}
+                  {new Date(time).toLocaleString()}
                 </span>
               ))}
             </div>
           </div>
         )}
 
-        <div className="pt-2">
-          <Link to="/movies" className="text-[#D50032] text-sm">
+        <div style={{ paddingTop: "8px" }}>
+          <Link to="/movies" style={{ color: "#D50032", textDecoration: "underline", fontSize: "14px" }}>
             ← Back to Movies
           </Link>
         </div>

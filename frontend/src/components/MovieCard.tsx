@@ -1,8 +1,18 @@
 // src/components/MovieCard.tsx
+type Movie = {
+  id: number;
+  title: string;
+  synopsis: string;
+  genre: string;
+  duration_minutes: number;
+  cast: string[];
+  rating: number;
+  image_url: string;
+  status: string; // "current" or "upcoming"
+};
 
-// If you have a Movie type you can replace `any` with it
-export default function MovieCard({ movie }: { movie: any }) {
-  const isUpcoming = movie.status === "upcoming";
+export default function MovieCard({ movie }: { movie: Movie }) {
+  const isCurrent = movie.status === "current";
 
   return (
     <div
@@ -19,8 +29,7 @@ export default function MovieCard({ movie }: { movie: any }) {
       {/* POSTER */}
       <div style={{ position: "relative" }}>
         <img
-          // IMPORTANT: your data uses posterUrl, not poster
-          src={movie.posterUrl}
+          src={movie.image_url}
           alt={movie.title}
           loading="lazy"
           style={{ width: "100%", display: "block" }}
@@ -42,17 +51,12 @@ export default function MovieCard({ movie }: { movie: any }) {
             padding: "6px 0",
           }}
         >
-          {isUpcoming ? "Advance Tickets" : "Now Showing"}
+          {isCurrent ? "Now Showing" : "Coming Soon"}
         </div>
       </div>
 
       {/* TITLE */}
-      <div
-        style={{
-          padding: "10px 12px 6px 12px",
-          textAlign: "center",
-        }}
-      >
+      <div style={{ padding: "10px 12px 6px 12px", textAlign: "center" }}>
         <h3
           style={{
             margin: 0,
@@ -65,7 +69,7 @@ export default function MovieCard({ movie }: { movie: any }) {
         </h3>
       </div>
 
-      {/* “TICKETS” BAR (grey section like Cinemark) */}
+      {/* TICKETS BAR */}
       <div
         style={{
           backgroundColor: "#f5f5f5",
