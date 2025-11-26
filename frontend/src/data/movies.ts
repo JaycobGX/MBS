@@ -31,7 +31,7 @@ export const movies: Movie[] = [
     synopsis:
       "In a brutal near-future, a struggling father volunteers for a deadly reality show where contestants are hunted on live TV. As he becomes an unexpected crowd favorite, he must outsmart both the ‘hunters’ and the corrupt network behind the game. The deeper he runs, the more he exposes the truth the regime is desperate to hide.",
     posterUrl:
-      "https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=800&auto=format&fit=crop",
+      "https://image.tmdb.org/t/p/original/yhWKTCYa0LK9kS6zcKGYc5Dx9xQ.jpg",
     durationMins: 133,
     genre: "Dystopian Action Thriller",
     cast: [
@@ -54,7 +54,7 @@ export const movies: Movie[] = [
     synopsis:
       "A young exiled Yautja warrior crash-lands on a savage frontier world where survival is a test of honor. Forced into an uneasy alliance with a damaged human-built android, he must face an apex creature that even his own kind fears. Each hunt blurs the line between prey and predator in the unforgiving badlands.",
     posterUrl:
-      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?q=80&w=800&auto=format&fit=crop",
+      "https://media.outnow.ch/Movies/Bilder/2025/Predator-Badlands/014.png",
     durationMins: 107,
     genre: "Science Fiction Action",
     cast: ["Elle Fanning", "Dimitrius Schuster-Koloamatangi"],
@@ -71,7 +71,7 @@ export const movies: Movie[] = [
     synopsis:
       "In the aftermath of Elphaba’s rebellion, Oz teeters between hope and fear. Glinda must decide whether to defend the glittering image of the Wizard’s world or confront the truth about power and sacrifice. The two women’s destinies collide in a final choice that will define what it means to be good.",
     posterUrl:
-      "https://images.unsplash.com/photo-1519681393784-d120267933ba?q=80&w=800&auto=format&fit=crop",
+      "http://www.impawards.com/2025/posters/wicked_for_good_ver2.jpg",
     durationMins: 137,
     genre: "Musical Fantasy",
     cast: [

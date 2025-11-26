@@ -32,7 +32,7 @@ export default function Home() {
               color: "#333333",
             }}
           >
-            MBS Tinseltown Lubbock and XD
+            MBS Raiderville Lubbock and XD
           </h1>
 
           {/* little sub-nav like “Theatre Info | Featured Movies | Advance Tickets” */}

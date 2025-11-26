@@ -5,56 +5,113 @@ import MovieCard from "../components/MovieCard";
 
 export default function Movies() {
   const [searchParams, setSearchParams] = useSearchParams();
-
-  const type = searchParams.get("type") || "now"; // "now" | "upcoming"
+  const tab = searchParams.get("type") === "upcoming" ? "upcoming" : "now";
 
   const nowShowing = movies.filter((m) => m.status === "current");
   const upcoming = movies.filter((m) => m.status === "upcoming");
-
-  const visibleMovies = type === "upcoming" ? upcoming : nowShowing;
+  const visibleMovies = tab === "upcoming" ? upcoming : nowShowing;
 
   function handleTabClick(next: "now" | "upcoming") {
     setSearchParams(next === "now" ? {} : { type: "upcoming" });
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
-      <h1 className="text-2xl font-bold text-[#333333]">Movies</h1>
-
-      {/* Tabs: Now Showing / Upcoming */}
-      <div className="inline-flex rounded-full border border-gray-300 bg-white overflow-hidden text-sm">
-        <button
-          onClick={() => handleTabClick("now")}
-          className={`px-4 py-2 font-medium ${
-            type !== "upcoming"
-              ? "bg-[#D50032] text-white"
-              : "bg-white text-gray-700"
-          }`}
+    <main>
+      {/* TOP HEADING + TABS (like “Browse Movies / Now Playing / Coming Soon”) */}
+      <section
+        style={{
+          borderBottom: "1px solid #eeeeee",
+          backgroundColor: "#ffffff",
+        }}
+      >
+        <div
+          className="container"
+          style={{ paddingTop: 24, paddingBottom: 12 }}
         >
-          Now Showing
-        </button>
-        <button
-          onClick={() => handleTabClick("upcoming")}
-          className={`px-4 py-2 font-medium border-l border-gray-300 ${
-            type === "upcoming"
-              ? "bg-[#D50032] text-white"
-              : "bg-white text-gray-700"
-          }`}
+          <h1
+            style={{
+              fontSize: 28,
+              fontWeight: 700,
+              color: "#333333",
+              marginBottom: 8,
+            }}
+          >
+            Browse Movies
+          </h1>
+
+          {/* Tabs */}
+          <div
+            style={{
+              display: "flex",
+              gap: 24,
+              fontSize: 15,
+              fontWeight: 500,
+            }}
+          >
+            <button
+              type="button"
+              onClick={() => handleTabClick("now")}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: tab === "now" ? "#D50032" : "#666666",
+                borderBottom:
+                  tab === "now" ? "2px solid #D50032" : "2px solid transparent",
+                paddingBottom: 4,
+              }}
+            >
+              Now Playing
+            </button>
+
+            <button
+              type="button"
+              onClick={() => handleTabClick("upcoming")}
+              style={{
+                background: "none",
+                border: "none",
+                padding: 0,
+                cursor: "pointer",
+                color: tab === "upcoming" ? "#D50032" : "#666666",
+                borderBottom:
+                  tab === "upcoming"
+                    ? "2px solid #D50032"
+                    : "2px solid transparent",
+                paddingBottom: 4,
+              }}
+            >
+              Coming Soon
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* GRID OF MOVIES USING MOVIECARD */}
+      <section>
+        <div
+          className="container"
+          style={{ paddingTop: 24, paddingBottom: 40 }}
         >
-          Upcoming
-        </button>
-      </div>
-
-      {/* Movie grid using MovieCard */}
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
-        {visibleMovies.map((movie) => (
-          <MovieCard key={movie.id} movie={movie} />
-        ))}
-      </div>
-
-      {visibleMovies.length === 0 && (
-        <p className="text-gray-500 text-sm">No movies to display.</p>
-      )}
-    </div>
+          {visibleMovies.length === 0 ? (
+            <p style={{ fontSize: 14, color: "#777777" }}>
+              No movies to display.
+            </p>
+          ) : (
+            <div
+              style={{
+                display: "flex",
+                flexWrap: "wrap",
+                gap: 24, // spacing between cards
+              }}
+            >
+              {visibleMovies.map((movie) => (
+                <MovieCard key={movie.id} movie={movie} />
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
+    </main>
   );
 }
