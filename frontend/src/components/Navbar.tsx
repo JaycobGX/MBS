@@ -1,60 +1,66 @@
 import { NavLink } from "react-router-dom";
-import type { ReactNode } from "react";
 
 export default function Navbar() {
-  // Temporary mock state — later will come from context/auth API
-  const isLoggedIn = false;
+  const isLoggedIn = false; // TODO replace with real auth
   const isAdmin = false;
-  const base = "px-3 py-2 text-sm font-medium rounded-md transition-colors duration-150";
-  const active = "bg-gray-200";
-  const inactive = "hover:bg-gray-100";
-
-  function NavItem({
-    to,
-    children,
-  }: {
-    to: string;
-    children: ReactNode;
-  }) {
-    return (
-      <NavLink
-        to={to}
-        className={({ isActive }) => `${base} ${isActive ? active : inactive}`}
-      >
-        {children}
-      </NavLink>
-    );
-  }
 
   return (
-    <header className="border-b bg-white">
-      <nav className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
-        {/* Brand / Logo */}
+    <header
+      style={{
+        width: "100%",
+        backgroundColor: "#ffffff",
+        borderBottom: "1px solid #e5e5e5",
+        padding: "15px 0",
+      }}
+    >
+      <div
+        className="container"
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+        }}
+      >
+        {/* LOGO */}
         <NavLink
           to="/"
-          className="text-xl font-bold tracking-tight select-none"
+          style={{
+            fontSize: "32px",
+            fontWeight: "bold",
+            color: "#D50032",
+          }}
         >
           MBS
         </NavLink>
 
-        {/* Navigation Links */}
-        <div className="flex items-center gap-3">
-          <NavItem to="/">Home</NavItem>
-          <NavItem to="/movies">Movies</NavItem>
+        {/* NAV LINKS */}
+        <nav style={{ display: "flex", gap: "25px", fontSize: "16px", fontWeight: 500 }}>
+          <NavLink to="/" className="nav-link">
+            Home
+          </NavLink>
+
+          <NavLink to="/movies" className="nav-link">
+            Movies
+          </NavLink>
 
           {!isLoggedIn ? (
             <>
-              <NavItem to="/login">Login</NavItem>
-              <NavItem to="/register">Register</NavItem>
+              <NavLink to="/login" className="nav-link">
+                Sign In
+              </NavLink>
+              <NavLink to="/register" className="nav-link">
+                Create Account
+              </NavLink>
             </>
           ) : (
-            <NavItem to="/profile">My Account</NavItem>
+            <NavLink to="/profile" className="nav-link">
+              My Account
+            </NavLink>
           )}
 
-          {/* Only show admin dashboard if user is admin */}
-          {isAdmin && <NavItem to="/admin">Admin</NavItem>}
-        </div>
-      </nav>
+          {isAdmin && <NavLink to="/admin" className="nav-link">Admin</NavLink>}
+        </nav>
+      </div>
     </header>
   );
 }

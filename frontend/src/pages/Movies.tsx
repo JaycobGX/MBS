@@ -1,92 +1,60 @@
-import { useMemo, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+// frontend/src/pages/Movies.tsx
+import { useSearchParams } from "react-router-dom";
 import { movies } from "../data/movies";
+import MovieCard from "../components/MovieCard";
 
 export default function Movies() {
-  const [params, setParams] = useSearchParams();
-  const initialType = (params.get("type") as "current" | "upcoming" | null) ?? "current";
+  const [searchParams, setSearchParams] = useSearchParams();
 
-  const [type, setType] = useState<"current" | "upcoming">(initialType);
-  const [query, setQuery] = useState("");
+  const type = searchParams.get("type") || "now"; // "now" | "upcoming"
 
-  const filtered = useMemo(() => {
-    return movies
-      .filter((m) => m.status === type)
-      .filter((m) => m.title.toLowerCase().includes(query.toLowerCase()));
-  }, [type, query]);
+  const nowShowing = movies.filter((m) => m.status === "current");
+  const upcoming = movies.filter((m) => m.status === "upcoming");
 
-  const switchType = (t: "current" | "upcoming") => {
-    setType(t);
-    setParams({ type: t });
-  };
+  const visibleMovies = type === "upcoming" ? upcoming : nowShowing;
+
+  function handleTabClick(next: "now" | "upcoming") {
+    setSearchParams(next === "now" ? {} : { type: "upcoming" });
+  }
 
   return (
-    <div className="space-y-5">
-      <div className="flex flex-col md:flex-row md:items-center gap-3 md:justify-between">
-        <h1 className="text-2xl font-bold">Movies</h1>
+    <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
+      <h1 className="text-2xl font-bold text-[#333333]">Movies</h1>
 
-        <input
-          className="border rounded-lg px-3 py-2 w-full md:w-80"
-          placeholder="Search by title..."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </div>
-
-      <div className="flex gap-2">
+      {/* Tabs: Now Showing / Upcoming */}
+      <div className="inline-flex rounded-full border border-gray-300 bg-white overflow-hidden text-sm">
         <button
-          onClick={() => switchType("current")}
-          className={`px-4 py-2 rounded-lg font-semibold ${
-            type === "current" ? "bg-gray-900 text-white" : "bg-gray-100"
+          onClick={() => handleTabClick("now")}
+          className={`px-4 py-2 font-medium ${
+            type !== "upcoming"
+              ? "bg-[#D50032] text-white"
+              : "bg-white text-gray-700"
           }`}
         >
-          Current
+          Now Showing
         </button>
         <button
-          onClick={() => switchType("upcoming")}
-          className={`px-4 py-2 rounded-lg font-semibold ${
-            type === "upcoming" ? "bg-gray-900 text-white" : "bg-gray-100"
+          onClick={() => handleTabClick("upcoming")}
+          className={`px-4 py-2 font-medium border-l border-gray-300 ${
+            type === "upcoming"
+              ? "bg-[#D50032] text-white"
+              : "bg-white text-gray-700"
           }`}
         >
           Upcoming
         </button>
       </div>
 
-      {filtered.length === 0 && (
-        <div className="text-gray-600">No movies match your search.</div>
-      )}
-
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {filtered.map((m) => (
-          <div key={m.id} className="border rounded-xl overflow-hidden bg-white">
-            <Link to={`/movies/${m.id}`}>
-              <img src={m.posterUrl} alt={m.title} className="h-56 w-full object-cover" />
-            </Link>
-            <div className="p-3 space-y-1">
-              <Link to={`/movies/${m.id}`} className="font-semibold hover:underline">
-                {m.title}
-              </Link>
-              <div className="text-sm text-gray-600">{m.runtimeMins} mins</div>
-
-              {m.status === "current" ? (
-                <Link
-                  to={`/booking/${m.id}`}
-                  className="inline-block mt-2 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm"
-                >
-                  Buy Tickets
-                </Link>
-              ) : (
-                <button
-                  disabled
-                  className="inline-block mt-2 px-3 py-1.5 bg-gray-300 text-gray-700 rounded-lg text-sm cursor-not-allowed"
-                >
-                  Coming Soon
-                </button>
-              )}
-            </div>
-          </div>
+      {/* Movie grid using MovieCard */}
+      <div className="grid gap-4 grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
+        {visibleMovies.map((movie) => (
+          <MovieCard key={movie.id} movie={movie} />
         ))}
       </div>
+
+      {visibleMovies.length === 0 && (
+        <p className="text-gray-500 text-sm">No movies to display.</p>
+      )}
     </div>
   );
 }

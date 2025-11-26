@@ -1,46 +1,47 @@
+// src/App.tsx
 import { Routes, Route } from "react-router-dom";
 import Navbar from "./components/Navbar";
-import type { ReactNode } from "react";
+import { Suspense, lazy, type ReactNode } from "react";
 
-// Pages
-import Home from "./pages/Home";
-import Movies from "./pages/Movies";
-import MovieDetails from "./pages/MovieDetails";
-import Booking from "./pages/Booking";
-import Login from "./pages/Login";
-import Register from "./pages/Register";
-import Profile from "./pages/Profile";
-import AdminDashboard from "./pages/AdminDashboard";
-import NotFound from "./pages/NotFound";
+// Lazy-loaded pages (code splitting)
+const Home = lazy(() => import("./pages/Home"));
+const Movies = lazy(() => import("./pages/Movies"));
+const MovieDetails = lazy(() => import("./pages/MovieDetails"));
+const Booking = lazy(() => import("./pages/Booking"));
+const Login = lazy(() => import("./pages/Login"));
+const Register = lazy(() => import("./pages/Register"));
+const Profile = lazy(() => import("./pages/Profile"));
+const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const NotFound = lazy(() => import("./pages/NotFound"));
 
-type Role = "user" | "admin";
-
-type User = {
-  email: string;
-  name: string;
-  role: Role;
+type GuardProps = {
+  children: ReactNode;
 };
 
-function getCurrentUser(): User | null {
-  if (typeof window === "undefined") return null;
+// Only logged-in users can see children
+const ProtectedRoute = ({ children }: GuardProps) => {
   const raw = localStorage.getItem("mbs_user");
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw) as User;
-  } catch {
-    return null;
-  }
-}
+  const user = raw ? JSON.parse(raw) : null;
 
-const ProtectedRoute = ({ children }: { children: ReactNode }) => {
-  const user = getCurrentUser();
-  return user ? <>{children}</> : <Login />;
+  if (!user) {
+    // Not logged in → show login page instead
+    return <Login />;
+  }
+
+  return <>{children}</>;
 };
 
-const AdminRoute = ({ children }: { children: ReactNode }) => {
-  const user = getCurrentUser();
-  const isAdmin = user && user.role === "admin";
-  return isAdmin ? <>{children}</> : <NotFound />;
+// Only admin users can see children
+const AdminRoute = ({ children }: GuardProps) => {
+  const raw = localStorage.getItem("mbs_user");
+  const user = raw ? JSON.parse(raw) : null;
+
+  if (!user || user.role !== "admin") {
+    // Not admin → show NotFound (or you could redirect)
+    return <NotFound />;
+  }
+
+  return <>{children}</>;
 };
 
 export default function App() {
@@ -48,7 +49,8 @@ export default function App() {
     <>
       <Navbar />
 
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      {/* Suspense is used here so lazy pages show a fallback while loading */}
+      <Suspense fallback={<div className="p-4">Loading…</div>}>
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/movies" element={<Movies />} />
@@ -86,7 +88,7 @@ export default function App() {
 
           <Route path="*" element={<NotFound />} />
         </Routes>
-      </div>
+      </Suspense>
     </>
   );
 }

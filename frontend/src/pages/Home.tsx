@@ -1,65 +1,266 @@
+// src/pages/Home.tsx
 import { Link } from "react-router-dom";
 import { movies } from "../data/movies";
+import MovieCard from "../components/MovieCard";
 
 export default function Home() {
-  const current = movies.filter((m) => m.status === "current");
+  const nowShowing = movies.filter((m) => m.status === "current");
   const upcoming = movies.filter((m) => m.status === "upcoming");
 
+  const featured = nowShowing[0];
+
   return (
-    <div className="space-y-10">
-      <header className="bg-gray-900 text-white rounded-2xl p-8">
-        <h1 className="text-3xl font-bold">Movie Booking System</h1>
-        <p className="opacity-90 mt-2">
-          Browse movies, buy tickets, and get your e-ticket instantly.
-        </p>
+    <main>
+      {/* TOP HEADING LIKE CINEMARK */}
+      <section
+        style={{
+          borderBottom: "1px solid #eeeeee",
+          backgroundColor: "#ffffff",
+        }}
+      >
+        <div
+          className="container"
+          style={{
+            paddingTop: "20px",
+            paddingBottom: "10px",
+          }}
+        >
+          <h1
+            style={{
+              fontSize: "28px",
+              fontWeight: 700,
+              color: "#333333",
+            }}
+          >
+            MBS Tinseltown Lubbock and XD
+          </h1>
 
-        <div className="mt-6 flex flex-wrap gap-3">
-          <Link to="/movies?type=current" className="px-4 py-2 bg-white text-gray-900 rounded-lg font-semibold">
-            Current Movies
-          </Link>
-          <Link to="/movies?type=upcoming" className="px-4 py-2 bg-white text-gray-900 rounded-lg font-semibold">
-            Upcoming Movies
-          </Link>
-          <Link to="/movies" className="px-4 py-2 bg-white text-gray-900 rounded-lg font-semibold">
-            Search Movies
-          </Link>
-          <Link to="/profile" className="px-4 py-2 bg-white text-gray-900 rounded-lg font-semibold">
-            Profile
-          </Link>
-        </div>
-      </header>
-
-      <section>
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Now Playing</h2>
-          <Link to="/movies?type=current" className="text-blue-600">View all</Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-          {current.map((m) => (
-            <Link key={m.id} to={`/movies/${m.id}`} className="group">
-              <img src={m.posterUrl} alt={m.title} className="rounded-xl h-56 w-full object-cover" />
-              <div className="mt-2 font-semibold group-hover:underline">{m.title}</div>
-              <div className="text-sm text-gray-600">{m.runtimeMins} mins</div>
-            </Link>
-          ))}
+          {/* little sub-nav like “Theatre Info | Featured Movies | Advance Tickets” */}
+          <div
+            style={{
+              marginTop: "12px",
+              display: "flex",
+              gap: "24px",
+              fontSize: "14px",
+              fontWeight: 500,
+            }}
+          >
+            <span style={{ color: "#666666", cursor: "pointer" }}>
+              Theatre Info
+            </span>
+            <span
+              style={{
+                color: "#D50032",
+                borderBottom: "2px solid #D50032",
+                paddingBottom: "4px",
+                cursor: "pointer",
+              }}
+            >
+              Featured Movies
+            </span>
+            <span style={{ color: "#666666", cursor: "pointer" }}>
+              Advance Tickets
+            </span>
+          </div>
         </div>
       </section>
 
+      {/* FEATURED STRIP (hero-ish, but cleaner) */}
+      {featured && (
+        <section
+          style={{
+            backgroundColor: "#f8f8f8",
+            borderBottom: "1px solid #eeeeee",
+          }}
+        >
+          <div
+            className="container"
+            style={{
+              display: "flex",
+              gap: "24px",
+              paddingTop: "20px",
+              paddingBottom: "20px",
+              alignItems: "center",
+            }}
+          >
+            <img
+              src={featured.posterUrl}
+              alt={featured.title}
+              loading="lazy"
+              style={{
+                width: "180px",
+                borderRadius: "4px",
+                boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+              }}
+            />
+
+            <div style={{ flex: 1 }}>
+              <p
+                style={{
+                  fontSize: "12px",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.18em",
+                  color: "#777777",
+                }}
+              >
+                Now Showing
+              </p>
+              <h2
+                style={{
+                  fontSize: "24px",
+                  fontWeight: 700,
+                  marginTop: "6px",
+                  color: "#333333",
+                }}
+              >
+                {featured.title}
+              </h2>
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "14px",
+                  color: "#555555",
+                  maxWidth: "640px",
+                }}
+              >
+                {featured.synopsis}
+              </p>
+
+              <p
+                style={{
+                  marginTop: "8px",
+                  fontSize: "13px",
+                  color: "#777777",
+                }}
+              >
+                {featured.genre} • {featured.durationMins} mins
+              </p>
+
+              <div style={{ marginTop: "12px", display: "flex", gap: "10px" }}>
+                <Link
+                  to={`/booking/${featured.id}`}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "4px",
+                    backgroundColor: "#D50032",
+                    color: "#ffffff",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                  }}
+                >
+                  Book Tickets
+                </Link>
+                <Link
+                  to={`/movies/${featured.id}`}
+                  style={{
+                    padding: "8px 16px",
+                    borderRadius: "4px",
+                    border: "1px solid #cccccc",
+                    color: "#333333",
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    textDecoration: "none",
+                    backgroundColor: "#ffffff",
+                  }}
+                >
+                  View Details
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* NOW SHOWING SECTION */}
       <section>
-        <div className="flex justify-between items-center">
-          <h2 className="text-xl font-bold">Coming Soon</h2>
-          <Link to="/movies?type=upcoming" className="text-blue-600">View all</Link>
-        </div>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mt-4">
-          {upcoming.map((m) => (
-            <Link key={m.id} to={`/movies/${m.id}`} className="group">
-              <img src={m.posterUrl} alt={m.title} className="rounded-xl h-56 w-full object-cover opacity-90" />
-              <div className="mt-2 font-semibold group-hover:underline">{m.title}</div>
-              <div className="text-sm text-gray-600">Upcoming</div>
+        <div
+          className="container"
+          style={{ paddingTop: "24px", paddingBottom: "12px" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "12px",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "#333333",
+              }}
+            >
+              Now Showing
+            </h2>
+            <Link
+              to="/movies"
+              style={{ fontSize: "14px", color: "#D50032", fontWeight: 500 }}
+            >
+              View all
             </Link>
-          ))}
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "18px",
+            }}
+          >
+            {nowShowing.map((m) => (
+              <MovieCard key={m.id} movie={m} />
+            ))}
+          </div>
         </div>
       </section>
-    </div>
+
+      {/* UPCOMING SECTION */}
+      <section style={{ paddingBottom: "40px" }}>
+        <div
+          className="container"
+          style={{ paddingTop: "28px", paddingBottom: "12px" }}
+        >
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              marginBottom: "12px",
+            }}
+          >
+            <h2
+              style={{
+                fontSize: "20px",
+                fontWeight: 700,
+                color: "#333333",
+              }}
+            >
+              Upcoming
+            </h2>
+            <Link
+              to="/movies?type=upcoming"
+              style={{ fontSize: "14px", color: "#D50032", fontWeight: 500 }}
+            >
+              View all
+            </Link>
+          </div>
+
+          <div
+            style={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: "18px",
+            }}
+          >
+            {upcoming.map((m) => (
+              <MovieCard key={m.id} movie={m} />
+            ))}
+          </div>
+        </div>
+      </section>
+    </main>
   );
 }

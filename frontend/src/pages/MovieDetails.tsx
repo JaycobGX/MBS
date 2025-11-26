@@ -1,134 +1,114 @@
-import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+// src/pages/MovieDetails.tsx
+import { useParams, Link } from "react-router-dom";
 import { movies } from "../data/movies";
 
-type Review = {
-  id: string;
-  user: string;
-  text: string;
-  stars: number;
-};
-
 export default function MovieDetails() {
-  const { id } = useParams();
-  const movie = useMemo(() => movies.find((m) => m.id === id), [id]);
+  const { id } = useParams<{ id: string }>();
+  const movie = movies.find((m) => m.id === id);
 
-  // mock reviews
-  const [reviews, setReviews] = useState<Review[]>([
-    { id: "r1", user: "Alex", text: "Loved it!", stars: 5 },
-    { id: "r2", user: "Sam", text: "Really fun watch.", stars: 4 },
-  ]);
-  const [reviewText, setReviewText] = useState("");
-  const [reviewStars, setReviewStars] = useState(5);
+  if (!movie) {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-10">
+        <h1 className="text-2xl font-bold text-[#333333] mb-2">
+          Movie not found
+        </h1>
+        <Link to="/movies" className="text-[#D50032] text-sm">
+          ← Back to Movies
+        </Link>
+      </div>
+    );
+  }
 
-  // placeholder: later check ticket-holder status per FR11.1
-  const canReview = true;
-
-  if (!movie) return <div>Movie not found.</div>;
+  const isUpcoming = movie.status === "upcoming";
 
   return (
-    <div className="grid md:grid-cols-3 gap-6">
-      <img
-        src={movie.posterUrl}
-        alt={movie.title}
-        className="rounded-2xl w-full object-cover md:col-span-1"
-      />
+    <div className="max-w-5xl mx-auto px-4 py-8 grid gap-8 md:grid-cols-[260px,1fr]">
+      {/* Poster */}
+      <div className="w-full">
+        <img
+          src={movie.posterUrl}
+          alt={movie.title}
+          className="w-full rounded-lg shadow-md object-cover"
+        />
+        <div className="mt-4 text-center">
+          {!isUpcoming ? (
+            <Link
+              to={`/booking/${movie.id}`}
+              className="inline-block px-5 py-2 bg-[#D50032] text-white rounded font-semibold text-sm hover:bg-[#b4002a]"
+            >
+              Book Tickets
+            </Link>
+          ) : (
+            <div className="inline-block px-5 py-2 bg-gray-200 text-gray-700 rounded text-sm font-semibold uppercase">
+              Advance Tickets
+            </div>
+          )}
+        </div>
+      </div>
 
-      <div className="md:col-span-2 space-y-4">
-        <h1 className="text-3xl font-bold">{movie.title}</h1>
-        <div className="text-gray-700">{movie.synopsis}</div>
-
-        <div className="text-sm text-gray-600">
-          Runtime: {movie.runtimeMins} mins
+      {/* Details */}
+      <div className="space-y-4">
+        <div>
+          <h1 className="text-3xl font-bold text-[#333333]">{movie.title}</h1>
+          <p className="text-sm text-gray-500 mt-1">
+            {movie.genre} • {movie.durationMins} mins •{" "}
+            {movie.category} •{" "}
+            {new Date(movie.releaseDate).toLocaleDateString()}
+          </p>
         </div>
 
         <div>
-          <h3 className="font-semibold">Cast</h3>
-          <ul className="list-disc ml-5 text-gray-700">
-            {movie.cast.map((c) => (
-              <li key={c}>{c}</li>
-            ))}
-          </ul>
+          <h2 className="text-lg font-semibold text-[#333333] mb-1">
+            Synopsis
+          </h2>
+          <p className="text-sm leading-relaxed text-gray-700">
+            {movie.synopsis}
+          </p>
         </div>
 
-        {movie.status === "current" ? (
-          <Link
-            to={`/booking/${movie.id}`}
-            className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg font-semibold"
-          >
-            Buy Tickets
-          </Link>
-        ) : (
-          <button
-            disabled
-            className="inline-block px-4 py-2 bg-gray-300 text-gray-700 rounded-lg font-semibold cursor-not-allowed"
-          >
-            Coming Soon (no advance booking)
-          </button>
-        )}
-
-        {/* Reviews per FR10/FR11 */}
-        <section className="pt-6 border-t space-y-3">
-          <h2 className="text-xl font-bold">Reviews</h2>
-
-          <div className="space-y-2">
-            {reviews.map((r) => (
-              <div key={r.id} className="border rounded-lg p-3 bg-gray-50">
-                <div className="font-semibold">{r.user}</div>
-                <div className="text-yellow-600 text-sm">{"★".repeat(r.stars)}</div>
-                <div>{r.text}</div>
-              </div>
-            ))}
+        <div className="grid gap-4 md:grid-cols-2">
+          <div>
+            <h3 className="text-sm font-semibold text-[#333333] mb-1">
+              Cast
+            </h3>
+            <ul className="text-sm text-gray-700 list-disc list-inside">
+              {movie.cast.map((actor) => (
+                <li key={actor}>{actor}</li>
+              ))}
+            </ul>
           </div>
 
-          {canReview && (
-            <div className="border rounded-lg p-3 space-y-2">
-              <div className="font-semibold">Leave a review</div>
+          <div>
+            <h3 className="text-sm font-semibold text-[#333333] mb-1">
+              Director
+            </h3>
+            <p className="text-sm text-gray-700">{movie.director}</p>
+          </div>
+        </div>
 
-              <select
-                value={reviewStars}
-                onChange={(e) => setReviewStars(Number(e.target.value))}
-                className="border rounded px-2 py-1"
-              >
-                {[5,4,3,2,1].map(s => (
-                  <option key={s} value={s}>{s} stars</option>
-                ))}
-              </select>
-
-              <textarea
-                className="border rounded-lg w-full p-2"
-                rows={3}
-                placeholder="Write your review..."
-                value={reviewText}
-                onChange={(e) => setReviewText(e.target.value)}
-              />
-
-              <button
-                onClick={() => {
-                  if (!reviewText.trim()) return;
-                  setReviews((prev) => [
-                    ...prev,
-                    {
-                      id: crypto.randomUUID(),
-                      user: "You",
-                      text: reviewText,
-                      stars: reviewStars,
-                    },
-                  ]);
-                  setReviewText("");
-                  setReviewStars(5);
-                }}
-                className="px-3 py-1.5 bg-gray-900 text-white rounded-lg"
-              >
-                Submit
-              </button>
-
-              <p className="text-xs text-gray-500">
-                (Later we’ll enforce “ticket-holders only” per FR11.1)
-              </p>
+        {!isUpcoming && (
+          <div>
+            <h3 className="text-sm font-semibold text-[#333333] mb-1">
+              Showtimes
+            </h3>
+            <div className="flex flex-wrap gap-2">
+              {movie.showtimes.map((time) => (
+                <span
+                  key={time}
+                  className="px-3 py-1 rounded-full border border-gray-300 text-xs text-gray-700"
+                >
+                  {time}
+                </span>
+              ))}
             </div>
-          )}
-        </section>
+          </div>
+        )}
+
+        <div className="pt-2">
+          <Link to="/movies" className="text-[#D50032] text-sm">
+            ← Back to Movies
+          </Link>
+        </div>
       </div>
     </div>
   );
