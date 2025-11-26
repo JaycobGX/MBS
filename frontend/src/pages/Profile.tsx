@@ -1,106 +1,256 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-type BookingHistoryItem = {
-  id: string;
-  movie: string;
-  date: string;
-  theater: string;
-  seats: number;
-  status: "past" | "upcoming";
-};
-
-export default function Profile() {
-  // mock user
-  const [user, setUser] = useState({
-    name: "Your Name",
-    email: "you@example.com",
-    address: "123 Main St",
-    phone: "555-555-5555",
-    password: "********",
-  });
-
+export default function ProfilePage() {
+  const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
 
-  const history: BookingHistoryItem[] = [
-    {
-      id: "TKT-12345",
-      movie: "Interstellar Re-Release",
-      date: "2025-11-20 7:10 PM",
-      theater: "Lubbock, TX",
-      seats: 2,
-      status: "past",
-    },
-    {
-      id: "TKT-55555",
-      movie: "The Last Voyage",
-      date: "2025-11-28 6:30 PM",
-      theater: "Amarillo, TX",
-      seats: 1,
-      status: "upcoming",
-    },
-  ];
+  const [formData, setFormData] = useState({
+    full_name: "",
+    email: "",
+    phone: "",
+    address: "",
+    password: "",
+  });
+
+  const [bookings, setBookings] = useState<any[]>([]);
+
+  // Fetch token
+  const token = localStorage.getItem("token");
+
+  // Load user profile
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/api/user/me", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const user = await res.json();
+
+        setFormData({
+          full_name: user.full_name || "",
+          email: user.email || "",
+          phone: user.phone || "",
+          address: user.address || "",
+          password: "",
+        });
+
+        setLoading(false);
+      } catch (err) {
+        console.log(err);
+        setLoading(false);
+      }
+    };
+
+    const fetchBookings = async () => {
+      try {
+        const res = await fetch("http://127.0.0.1:5000/api/user/me/bookings", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setBookings(data);
+      } catch (err) {
+        console.log(err);
+      }
+    };
+
+    fetchUser();
+    fetchBookings();
+  }, []);
+
+  // Save changes
+  const handleSave = async () => {
+    try {
+      const res = await fetch("http://127.0.0.1:5000/api/user/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await res.json();
+      console.log("Updated:", data);
+      setEditing(false);
+      alert("Profile updated!");
+    } catch (err) {
+      console.log(err);
+    }
+  };
+
+  if (loading) return <div>Loading...</div>;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">Account / Profile</h1>
+    <div style={styles.container}>
+      <h1 style={styles.title}>My Profile</h1>
 
-      {/* Personal info per FR9 */}
-      <div className="border rounded-xl p-4 space-y-3">
-        <div className="flex justify-between items-center">
-          <h2 className="text-lg font-semibold">Personal Information</h2>
-          <button
-            onClick={() => setEditing((e) => !e)}
-            className="text-blue-600 font-semibold"
-          >
-            {editing ? "Done" : "Edit"}
+      {/* User Info Section */}
+      <div style={styles.card}>
+        <h2 style={styles.sectionTitle}>Account Details</h2>
+
+        {/* Name */}
+        <label style={styles.label}>Full Name</label>
+        <input
+          style={styles.input}
+          disabled={!editing}
+          value={formData.full_name}
+          onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
+        />
+
+        {/* Email */}
+        <label style={styles.label}>Email</label>
+        <input
+          style={styles.input}
+          disabled={!editing}
+          value={formData.email}
+          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+        />
+
+        {/* Phone */}
+        <label style={styles.label}>Phone</label>
+        <input
+          style={styles.input}
+          disabled={!editing}
+          value={formData.phone}
+          onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+        />
+
+        {/* Address */}
+        <label style={styles.label}>Address</label>
+        <input
+          style={styles.input}
+          disabled={!editing}
+          value={formData.address}
+          onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+        />
+
+        {/* Password */}
+        <label style={styles.label}>New Password</label>
+        <input
+          style={styles.input}
+          disabled={!editing}
+          type="password"
+          placeholder="Leave blank to keep old password"
+          value={formData.password}
+          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+        />
+
+        {/* Buttons */}
+        {!editing ? (
+          <button style={styles.editBtn} onClick={() => setEditing(true)}>
+            Edit Profile
           </button>
-        </div>
-
-        {(["name", "email", "address", "phone"] as const).map((field) => (
-          <div key={field} className="grid grid-cols-3 gap-3 items-center">
-            <label className="capitalize text-gray-600">{field}</label>
-            {editing ? (
-              <input
-                className="border rounded px-2 py-1 col-span-2"
-                value={user[field]}
-                onChange={(e) =>
-                  setUser((u) => ({ ...u, [field]: e.target.value }))
-                }
-              />
-            ) : (
-              <div className="col-span-2">{user[field]}</div>
-            )}
+        ) : (
+          <div style={styles.buttonRow}>
+            <button style={styles.saveBtn} onClick={handleSave}>
+              Save
+            </button>
+            <button style={styles.cancelBtn} onClick={() => setEditing(false)}>
+              Cancel
+            </button>
           </div>
-        ))}
+        )}
       </div>
 
-      {/* Ticket/Order history per FR14 */}
-      <div className="border rounded-xl p-4 space-y-3">
-        <h2 className="text-lg font-semibold">Ticket / Order History</h2>
+      {/* Booking History */}
+      <div style={styles.card}>
+        <h2 style={styles.sectionTitle}>Booking History</h2>
 
-        <div className="space-y-2">
-          {history
-            .sort((a, b) => a.date.localeCompare(b.date))
-            .map((h) => (
-              <div key={h.id} className="border rounded-lg p-3 bg-gray-50">
-                <div className="font-semibold">{h.movie}</div>
-                <div className="text-sm text-gray-700">{h.date}</div>
-                <div className="text-sm text-gray-700">{h.theater}</div>
-                <div className="text-sm text-gray-700">Seats: {h.seats}</div>
-                <div className="text-xs text-gray-600 capitalize">
-                  {h.status}
-                </div>
-
-                <button
-                  className="mt-2 text-blue-600 text-sm font-semibold"
-                  onClick={() => alert(`Ticket ID: ${h.id}`)}
-                >
-                  View Ticket
-                </button>
-              </div>
-            ))}
-        </div>
+        {bookings.length === 0 ? (
+          <p>No bookings yet.</p>
+        ) : (
+          bookings.map((b) => (
+            <div key={b.id} style={styles.bookingItem}>
+              <p><strong>Booking ID:</strong> {b.id}</p>
+              <p><strong>Movie:</strong> {b.movie_title}</p>
+              <p><strong>Theater:</strong> {b.theater_name}</p>
+              <p><strong>Seats:</strong> {b.num_seats}</p>
+              <p><strong>Total:</strong> ${b.total_price}</p>
+            </div>
+          ))
+        )}
       </div>
     </div>
   );
 }
+
+// -------------------------
+// Inline CSS Styles
+// -------------------------
+const styles: Record<string, React.CSSProperties> = {
+  container: {
+    width: "90%",
+    maxWidth: "900px",
+    margin: "0 auto",
+    paddingTop: "30px",
+    fontFamily: "Arial, sans-serif",
+  },
+  title: {
+    textAlign: "center",
+    fontSize: "32px",
+    fontWeight: "bold",
+    marginBottom: "20px",
+  },
+  card: {
+    background: "#fff",
+    padding: "20px",
+    borderRadius: "10px",
+    marginTop: "20px",
+    boxShadow: "0 4px 10px rgba(0,0,0,0.1)",
+  },
+  sectionTitle: {
+    fontSize: "22px",
+    marginBottom: "15px",
+  },
+  label: {
+    fontWeight: "bold",
+    marginTop: "12px",
+    display: "block",
+  },
+  input: {
+    width: "100%",
+    padding: "10px",
+    borderRadius: "6px",
+    border: "1px solid #ccc",
+    marginTop: "5px",
+    marginBottom: "10px",
+    fontSize: "16px",
+  },
+  editBtn: {
+    marginTop: "15px",
+    padding: "10px 20px",
+    background: "#007bff",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "16px",
+  },
+  buttonRow: {
+    display: "flex",
+    gap: "10px",
+    marginTop: "15px",
+  },
+  saveBtn: {
+    padding: "10px 20px",
+    background: "green",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+  },
+  cancelBtn: {
+    padding: "10px 20px",
+    background: "gray",
+    color: "#fff",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+  },
+  bookingItem: {
+    padding: "15px",
+    border: "1px solid #ddd",
+    borderRadius: "8px",
+    marginBottom: "10px",
+  },
+};
