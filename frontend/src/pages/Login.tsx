@@ -43,13 +43,13 @@ export default function Login() {
       }
 
       // Save token and role
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("role", data.role);
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("role", data.user.role);
 
       setLoading(false);
 
       // Redirect
-      if (data.role === "admin") {
+      if (data.user.role === "admin") {
         navigate("/Admindashboard");
       } else {
         navigate("/home");

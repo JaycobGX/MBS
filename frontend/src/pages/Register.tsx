@@ -48,13 +48,14 @@ export default function Register() {
       }
 
       // Save token & role
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("role", data.user.is_admin ? "admin" : "user");
+      localStorage.setItem("access_token", data.access_token);
+      localStorage.setItem("role", data.user.role); // "CUSTOMER" or "admin"
+
 
       setLoading(false);
 
       // Redirect
-      if (data.user.is_admin) {
+      if (data.user.role == "admin") {
         navigate("/Admindashboard");
       } else {
         navigate("/home");
